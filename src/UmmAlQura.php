@@ -108,6 +108,51 @@ final class UmmAlQura
     }
 
     /**
+     * Arabic weekday names, indexed by ISO day number (1 = Monday).
+     */
+    private const WEEKDAY_NAMES_AR = [
+        1 => 'الاثنين',
+        2 => 'الثلاثاء',
+        3 => 'الأربعاء',
+        4 => 'الخميس',
+        5 => 'الجمعة',
+        6 => 'السبت',
+        7 => 'الأحد',
+    ];
+
+    /**
+     * Same names without the definite article (short 'D' token form).
+     */
+    private const WEEKDAY_NAMES_AR_SHORT = [
+        1 => 'اثنين',
+        2 => 'ثلاثاء',
+        3 => 'أربعاء',
+        4 => 'خميس',
+        5 => 'جمعة',
+        6 => 'سبت',
+        7 => 'أحد',
+    ];
+
+    /**
+     * Format a Gregorian date as its Umm al-Qura Hijri date using the token
+     * subset of {@see HijriDate::format()} plus 'l' (full Arabic weekday
+     * name) and 'D' (short weekday name), which come from the Gregorian date
+     * itself. Weekday substitution happens before Hijri formatting — Arabic
+     * letters are never format tokens, so the substituted text is inert.
+     *
+     * @throws OutOfSupportedRangeException
+     */
+    public static function format(DateTimeInterface $date, string $pattern): string
+    {
+        $isoDay = (int) $date->format('N');
+
+        return self::toHijri($date)->format(strtr($pattern, [
+            'l' => self::WEEKDAY_NAMES_AR[$isoDay],
+            'D' => self::WEEKDAY_NAMES_AR_SHORT[$isoDay],
+        ]));
+    }
+
+    /**
      * Whether a Gregorian date — or a (year, month, day) Hijri triple — is
      * inside the supported table range.
      */

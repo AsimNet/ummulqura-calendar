@@ -229,6 +229,27 @@ final class UmmAlQuraTest extends TestCase
         }
     }
 
+    public function test_format_tokens(): void
+    {
+        $date = new HijriDate(1447, 9, 5);
+
+        $this->assertSame('1447/09/05', $date->format('Y/m/d'));
+        $this->assertSame('1447/9/5', $date->format('Y/n/j'));
+        $this->assertSame('5 رمضان 1447', $date->format('j F Y'));
+        $this->assertSame('47', $date->format('y'));
+        $this->assertSame('Y 1447', $date->format('\Y Y'));
+    }
+
+    public function test_gregorian_format_with_weekday_tokens(): void
+    {
+        // 2026-03-20 (Friday) = 1447-10-01 official.
+        $date = new DateTimeImmutable('2026-03-20');
+
+        $this->assertSame('1447/10/1', UmmAlQura::format($date, 'Y/n/j'));
+        $this->assertSame('الجمعة 1 شوال 1447', UmmAlQura::format($date, 'l j F Y'));
+        $this->assertSame('جمعة 1 شوال 1447', UmmAlQura::format($date, 'D j F Y'));
+    }
+
     public function test_indic_digit_formatting(): void
     {
         $this->assertSame('٠١٢٣٤٥٦٧٨٩', HijriDate::toIndicDigits('0123456789'));

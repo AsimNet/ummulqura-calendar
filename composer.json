@@ -1,5 +1,5 @@
 {
-    "name": "asimnet/umm-al-qura",
+    "name": "asimnet/ummulqura-calendar",
     "description": "Exact Gregorian <-> Hijri date conversion on the official Saudi Umm al-Qura calendar (KACST tables). Pure PHP, zero dependencies.",
     "keywords": ["hijri", "umm-al-qura", "calendar", "date", "islamic", "saudi", "kacst"],
     "type": "library",

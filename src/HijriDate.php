@@ -86,6 +86,42 @@ final class HijriDate
         ]);
     }
 
+    /**
+     * Format using a subset of PHP date() tokens applied to the HIJRI
+     * components: Y (4-digit year), y (2-digit year), m (zero-padded month),
+     * n (month), d (zero-padded day), j (day), F (Arabic month name).
+     * A backslash escapes the next character. Digits are Western; wrap with
+     * {@see toIndicDigits()} for Eastern Arabic numerals.
+     */
+    public function format(string $pattern): string
+    {
+        $out = '';
+        $length = strlen($pattern);
+
+        for ($i = 0; $i < $length; $i++) {
+            $char = $pattern[$i];
+
+            if ($char === '\\' && $i + 1 < $length) {
+                $out .= $pattern[++$i];
+
+                continue;
+            }
+
+            $out .= match ($char) {
+                'Y' => sprintf('%04d', $this->year),
+                'y' => substr(sprintf('%04d', $this->year), -2),
+                'm' => sprintf('%02d', $this->month),
+                'n' => (string) $this->month,
+                'd' => sprintf('%02d', $this->day),
+                'j' => (string) $this->day,
+                'F' => $this->monthNameAr(),
+                default => $char,
+            };
+        }
+
+        return $out;
+    }
+
     public function equals(self $other): bool
     {
         return $this->year === $other->year

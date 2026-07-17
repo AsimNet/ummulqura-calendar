@@ -1,4 +1,7 @@
-# Umm al-Qura Calendar for PHP
+# Ummulqura Calendar for PHP
+
+> Composer package: `asimnet/ummulqura-calendar` — the PHP namespace remains
+> `AsimNet\UmmAlQura`.
 
 Exact Gregorian ↔ Hijri date conversion on the **official Saudi Umm al-Qura
 calendar**, backed by a month-start table **harvested directly from the
@@ -13,7 +16,7 @@ Saudi Arabia actually uses.
 ## Installation
 
 ```bash
-composer require asimnet/umm-al-qura
+composer require asimnet/ummulqura-calendar
 ```
 
 Requires PHP 8.1+.
@@ -92,11 +95,12 @@ stays trivially testable.
 
 ## Data source & attribution
 
-The bundled month-start table (`src/Data/MonthStarts.php`) was **harvested
-directly from the official Umm al-Qura conversion API** of ummulqura.org.sa
-(KACST — King Abdulaziz City for Science and Technology, Saudi Arabia): one
-lookup per Hijri month, all 2,196 months verified (strictly monotonic,
-29/30-day lengths, weekday-consistent) with zero failures.
+The bundled month-start table (`src/Data/MonthStarts.php`) was **scraped
+directly from the official Umm al-Qura calendar website:
+<https://www.ummulqura.org.sa/ar>** (its KACST conversion API — King
+Abdulaziz City for Science and Technology, Saudi Arabia): one lookup per
+Hijri month, all 2,196 months verified (strictly monotonic, 29/30-day
+lengths, weekday-consistent) with zero failures.
 
 The table layout (reduced-Julian-day month starts + binary search) was
 inspired by the [hijridate](https://github.com/dralshehri/hijridate) Python
