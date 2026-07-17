@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AsimNet\UmmAlQura;
+namespace AsimNet\UmmulquraCalendar;
 
 /**
  * An immutable Hijri (Umm al-Qura) calendar date.

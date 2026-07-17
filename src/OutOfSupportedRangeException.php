@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AsimNet\UmmAlQura;
+namespace AsimNet\UmmulquraCalendar;
 
 use RuntimeException;
 

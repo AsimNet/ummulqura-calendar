@@ -20,7 +20,7 @@ composer require asimnet/ummulqura-calendar
 ## الاستخدام
 
 ```php
-use AsimNet\UmmAlQura\UmmAlQura;
+use AsimNet\UmmulquraCalendar\UmmAlQura;
 
 // من ميلادي إلى هجري
 $hijri = UmmAlQura::toHijri(new DateTimeImmutable('2026-03-20'));
@@ -48,7 +48,7 @@ UmmAlQura::monthLength(1447, 9); // عدد أيام رمضان 1447
 | هجري     | 1318-01-01   | 1500-12-30   |
 
 التواريخ خارج هذا النطاق تُطلق الاستثناء
-`AsimNet\UmmAlQura\OutOfSupportedRangeException`.
+`AsimNet\UmmulquraCalendar\OutOfSupportedRangeException`.
 
 ## مصدر البيانات
 

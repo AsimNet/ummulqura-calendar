@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AsimNet\UmmAlQura\Tests;
+namespace AsimNet\UmmulquraCalendar\Tests;
 
-use AsimNet\UmmAlQura\HijriDate;
-use AsimNet\UmmAlQura\OutOfSupportedRangeException;
-use AsimNet\UmmAlQura\UmmAlQura;
+use AsimNet\UmmulquraCalendar\HijriDate;
+use AsimNet\UmmulquraCalendar\OutOfSupportedRangeException;
+use AsimNet\UmmulquraCalendar\UmmAlQura;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

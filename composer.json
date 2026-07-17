@@ -17,12 +17,12 @@
     },
     "autoload": {
         "psr-4": {
-            "AsimNet\\UmmAlQura\\": "src/"
+            "AsimNet\\UmmulquraCalendar\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "AsimNet\\UmmAlQura\\Tests\\": "tests/"
+            "AsimNet\\UmmulquraCalendar\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "stable"

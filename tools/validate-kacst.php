@@ -18,7 +18,7 @@ declare(strict_types=1);
 
 require_once __DIR__.'/../tests/bootstrap.php';
 
-use AsimNet\UmmAlQura\UmmAlQura;
+use AsimNet\UmmulquraCalendar\UmmAlQura;
 
 $template = $argv[1] ?? null;
 $samples = (int) ($argv[2] ?? 40);

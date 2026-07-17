@@ -1,7 +1,7 @@
 # Ummulqura Calendar for PHP
 
 > Composer package: `asimnet/ummulqura-calendar` — the PHP namespace remains
-> `AsimNet\UmmAlQura`.
+> `AsimNet\UmmulquraCalendar`.
 
 Exact Gregorian ↔ Hijri date conversion on the **official Saudi Umm al-Qura
 calendar**, backed by a month-start table **harvested directly from the
@@ -24,8 +24,8 @@ Requires PHP 8.1+.
 ## Usage
 
 ```php
-use AsimNet\UmmAlQura\UmmAlQura;
-use AsimNet\UmmAlQura\HijriDate;
+use AsimNet\UmmulquraCalendar\UmmAlQura;
+use AsimNet\UmmulquraCalendar\HijriDate;
 
 // Gregorian → Hijri
 $hijri = UmmAlQura::toHijri(new DateTimeImmutable('2026-03-20'));
@@ -60,7 +60,7 @@ The official tables cover:
 | Gregorian | 1900-04-30   | 2077-11-16   |
 | Hijri     | 1318-01-01   | 1500-12-30   |
 
-Dates outside this range throw `AsimNet\UmmAlQura\OutOfSupportedRangeException`.
+Dates outside this range throw `AsimNet\UmmulquraCalendar\OutOfSupportedRangeException`.
 
 ## Why not an arithmetic Hijri library?
 
