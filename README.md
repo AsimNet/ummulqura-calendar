@@ -1,16 +1,27 @@
-# Ummulqura Calendar for PHP
+# Ummulqura Calendar
 
-> `composer require asimnet/ummulqura-calendar` — namespace `AsimNet\UmmulquraCalendar`.
+**Exact Gregorian ↔ Hijri conversion on the official Saudi Umm al-Qura calendar, for PHP.**
 
-Exact Gregorian ↔ Hijri date conversion on the **official Saudi Umm al-Qura
-calendar**, backed by a month-start table **harvested directly from the
-official KACST conversion service** (ummulqura.org.sa) — not an arithmetic
-approximation. Pure PHP, **zero runtime dependencies**.
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![PHP 8.1+](https://img.shields.io/badge/php-%E2%89%A5%208.1-777bb4.svg)
+![Zero dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)
 
-Common arithmetic Hijri algorithms drift by ±1 day from the official calendar
-on many dates (including Eid al-Fitr and Eid al-Adha). This library looks the
-answer up in the official tables instead, so it always matches the calendar
-Saudi Arabia actually uses.
+Most Hijri libraries *calculate* the lunar calendar arithmetically and drift by
+±1 day from the calendar Saudi Arabia actually uses — including on Eid al-Fitr
+and Eid al-Adha. This library doesn't calculate anything: it looks the answer
+up in the **official Umm al-Qura month tables**, scraped directly from
+[ummulqura.org.sa](https://www.ummulqura.org.sa/ar), so every conversion
+matches the official calendar exactly.
+
+- 🎯 **Exact** — all 2,196 bundled months fetched from the official KACST
+  conversion service and verified in both directions
+- 🪶 **Zero dependencies** — pure PHP, works with any `DateTimeInterface`
+  (including Carbon)
+- 🗓️ **Wide range** — 1318–1500 AH (1900–2077 CE)
+- 🧪 **Proven** — self-contained test suite pinning officially verified dates,
+  round-trips, boundaries and month lengths
+
+[اقرأ بالعربية](README.ar.md)
 
 ## Installation
 
@@ -18,101 +29,110 @@ Saudi Arabia actually uses.
 composer require asimnet/ummulqura-calendar
 ```
 
-Requires PHP 8.1+.
+Requires PHP 8.1 or newer. No extensions, no framework.
 
-## Usage
+## Quick start
 
 ```php
 use AsimNet\UmmulquraCalendar\UmmAlQura;
-use AsimNet\UmmulquraCalendar\HijriDate;
 
-// Gregorian → Hijri
 $hijri = UmmAlQura::toHijri(new DateTimeImmutable('2026-03-20'));
-$hijri->year;            // 1447
-$hijri->month;           // 10
-$hijri->day;             // 1  (Eid al-Fitr)
-$hijri->monthNameAr();   // 'شوال'
-$hijri->monthNameEn();   // 'Shawwal'
-$hijri->toIsoString();   // '1447-10-01'
-$hijri->toArabicString();// '1 شوال 1447هـ'
 
-// Hijri → Gregorian (returns DateTimeImmutable, midnight UTC)
-UmmAlQura::toGregorian(1447, 10, 1)->format('Y-m-d'); // '2026-03-20'
-
-// Month length (29 or 30)
-UmmAlQura::monthLength(1447, 9); // days in Ramadan 1447
-
-// Range checks
-UmmAlQura::supports(new DateTimeImmutable('2080-01-01')); // false
-UmmAlQura::supports(1447, 9, 30);                          // true
+$hijri->year;             // 1447
+$hijri->month;            // 10
+$hijri->day;              // 1  — Eid al-Fitr
+$hijri->monthNameAr();    // 'شوال'
+$hijri->monthNameEn();    // 'Shawwal'
+$hijri->toIsoString();    // '1447-10-01'
+$hijri->toArabicString(); // '1 شوال 1447هـ'
 ```
 
-Any `DateTimeInterface` is accepted (including `Carbon`); only the calendar
-date (Y-m-d) is read — time and timezone are ignored.
+```php
+// Hijri → Gregorian (DateTimeImmutable, midnight UTC)
+UmmAlQura::toGregorian(1447, 10, 1)->format('Y-m-d'); // '2026-03-20'
+```
 
-## Supported range
+## Usage
 
-The official tables cover:
+### Converting dates
 
-| Calendar  | From         | To           |
-|-----------|--------------|--------------|
-| Gregorian | 1900-04-30   | 2077-11-16   |
-| Hijri     | 1318-01-01   | 1500-12-30   |
+Any `DateTimeInterface` is accepted — `DateTime`, `DateTimeImmutable`, Carbon…
+Only the calendar date (Y‑m‑d) is read; time of day and timezone are ignored.
 
-Dates outside this range throw `AsimNet\UmmulquraCalendar\OutOfSupportedRangeException`.
+```php
+$hijri = UmmAlQura::toHijri(Carbon\Carbon::parse('2026-07-17'));
+$greg  = UmmAlQura::toGregorian($hijri->year, $hijri->month, $hijri->day);
+```
 
-## Why not an arithmetic Hijri library?
+There are deliberately no `now()`/`today()` helpers and no global state:
+`UmmAlQura::toHijri(new DateTimeImmutable)` is "today", and everything stays
+trivially testable.
 
-Arithmetic implementations approximate the lunar calendar and drift from the
-official Umm al-Qura table — and even table-based datasets can diverge from
-the official converter. Verified against the official KACST service:
+### Month lengths
 
-- `geniusts/hijri-dates` (arithmetic, ships **no test suite**): ±1 day on
-  many dates, including both Eids of 1447.
-- the `hijridate` (Python) dataset: **740 of 1,897 month starts (39%)**
-  differ from the official conversion service.
-- **this package: exact** — every one of the 2,196 bundled months was
-  fetched from the official service itself (zero failures, strictly
-  monotonic, all lengths 29/30, weekday-consistent).
+```php
+UmmAlQura::monthLength(1447, 9); // days in Ramadan 1447 (29 or 30)
+```
 
-Sample `geniusts/hijri-dates` divergences:
+### Range checking
 
-| Gregorian   | Official Umm al-Qura | geniusts/hijri-dates |
-|-------------|----------------------|----------------------|
-| 2026-02-17  | 1447-08-29           | 1447-09-01 ✗         |
-| 2026-03-20 (عيد الفطر) | 1447-10-01 | off by ±1 ✗        |
-| 2026-05-27 (نحو عيد الأضحى) | 1447-12-10 | off by ±1 ✗   |
-| 2030-01-01  | 1451-08-26           | off by ±1 ✗          |
+The official tables cover a fixed range. Check before converting, or catch the
+dedicated exception:
 
-Even the example in its own README (`2017-05-05 ↔ 1438-08-08`) is one day off
-the official table (2017-05-05 is actually **1438-08-09**). This library
-matches the official table exactly for every date in 1343–1500 AH.
+```php
+UmmAlQura::supports(new DateTimeImmutable('2080-01-01')); // false
+UmmAlQura::supports(1447, 9, 30);                         // true
 
-There are no `now()`/`today()` convenience helpers by design — the library is
-stateless; `UmmAlQura::toHijri(new DateTimeImmutable)` covers "today" and
-stays trivially testable.
+try {
+    UmmAlQura::toHijri(new DateTimeImmutable('1850-01-01'));
+} catch (AsimNet\UmmulquraCalendar\OutOfSupportedRangeException $e) {
+    // fall back to whatever suits your app
+}
+```
 
-## Data source & attribution
+| Calendar  | From       | To         |
+|-----------|------------|------------|
+| Hijri     | 1318-01-01 | 1500-12-30 |
+| Gregorian | 1900-04-30 | 2077-11-16 |
 
-The bundled month-start table (`src/Data/MonthStarts.php`) was **scraped
-directly from the official Umm al-Qura calendar website:
-<https://www.ummulqura.org.sa/ar>** (its KACST conversion API — King
-Abdulaziz City for Science and Technology, Saudi Arabia): one lookup per
-Hijri month, all 2,196 months verified (strictly monotonic, 29/30-day
-lengths, weekday-consistent) with zero failures.
+## Accuracy
 
-The table layout (reduced-Julian-day month starts + binary search) was
-inspired by the [hijridate](https://github.com/dralshehri/hijridate) Python
-package by Mohammed Alshehri (MIT) — the data itself is KACST-harvested.
+Verified against the official KACST conversion service:
 
-A validation script that cross-checks the conversion against the official
-KACST web service lives in [`tools/validate-kacst.php`](tools/validate-kacst.php)
-(network access required; not part of the test suite).
+| Library | Result |
+|---------|--------|
+| **This package** | **Exact — 2,196/2,196 official months match, both directions** |
+| `geniusts/hijri-dates` (arithmetic, no test suite) | ±1 day on many dates, including both Eids of 1447 |
+| `hijridate` dataset (Python, table-based) | 740 of 1,897 month starts (39%) differ from the official service |
+
+A few examples of arithmetic drift:
+
+| Gregorian | Official Umm al-Qura | `geniusts/hijri-dates` |
+|-----------|----------------------|------------------------|
+| 2026-02-17 | 29 Shaʿban 1447 | 1 Ramadan 1447 ✗ |
+| 2026-03-20 | **1 Shawwal 1447 (Eid al-Fitr)** | 2 Shawwal ✗ |
+| 2026-05-27 | **10 Dhu al-Hijjah 1447 (Eid al-Adha)** | 11 Dhu al-Hijjah ✗ |
+| 2017-05-05 | 9 Shaʿban 1438 | 8 Shaʿban ✗ (its own README example) |
+
+## Data source
+
+The bundled month-start table was scraped, one lookup per Hijri month, from the
+official Umm al-Qura website — **<https://www.ummulqura.org.sa/ar>** — operated
+by KACST (King Abdulaziz City for Science and Technology, Saudi Arabia), and
+validated end-to-end: zero failed lookups, strictly monotonic month starts, all
+month lengths 29/30, and weekdays consistent with the service's own output.
+
+A re-validation script that cross-checks conversions against the live official
+service ships in [`tools/validate-kacst.php`](tools/validate-kacst.php)
+(network required; intentionally not part of the test suite).
+
+The reduced-Julian-day table layout was inspired by
+[hijridate](https://github.com/dralshehri/hijridate) by Mohammed Alshehri
+(MIT); the data itself is scraped from the official source.
 
 ## Testing
 
-The test suite is self-contained (no composer install needed inside the
-package):
+The suite is self-contained — no `composer install` needed inside the package:
 
 ```bash
 phpunit -c phpunit.xml
@@ -120,4 +140,4 @@ phpunit -c phpunit.xml
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+[MIT](LICENSE)
