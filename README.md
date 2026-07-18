@@ -1,7 +1,6 @@
 # Ummulqura Calendar for PHP
 
-> Composer package: `asimnet/ummulqura-calendar` — the PHP namespace remains
-> `AsimNet\UmmulquraCalendar`.
+> `composer require asimnet/ummulqura-calendar` — namespace `AsimNet\UmmulquraCalendar`.
 
 Exact Gregorian ↔ Hijri date conversion on the **official Saudi Umm al-Qura
 calendar**, backed by a month-start table **harvested directly from the
