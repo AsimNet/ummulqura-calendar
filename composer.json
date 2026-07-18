@@ -1,9 +1,22 @@
 {
     "name": "asimnet/ummulqura-calendar",
     "description": "Exact Gregorian <-> Hijri date conversion on the official Saudi Umm al-Qura calendar (KACST tables). Pure PHP, zero dependencies.",
-    "keywords": ["hijri", "umm-al-qura", "calendar", "date", "islamic", "saudi", "kacst"],
+    "keywords": [
+        "hijri",
+        "umm-al-qura",
+        "calendar",
+        "date",
+        "islamic",
+        "saudi",
+        "kacst"
+    ],
     "type": "library",
     "license": "MIT",
+    "homepage": "https://github.com/AsimNet/ummulqura-calendar",
+    "support": {
+        "issues": "https://github.com/AsimNet/ummulqura-calendar/issues",
+        "source": "https://github.com/AsimNet/ummulqura-calendar"
+    },
     "authors": [
         {
             "name": "AsimNet"
