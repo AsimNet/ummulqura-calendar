@@ -148,10 +148,11 @@ not investigated here.
 
 ### What this means in practice
 
-A pre-1420 conversion can differ by a day from Saudi civil records holding the
-same Hijri date. The official service pairs 24 Shawwal 1415 with 1995-03-26,
-while national IDs issued from the almanac in force then pair it with
-1995-03-25. Neither is a bug; they answer different questions.
+A pre-1420 conversion can differ from Saudi civil records holding the same Hijri
+date — usually by a day, and for 15 of the 768 covered months by **two**. The
+official service pairs 24 Shawwal 1415 with 1995-03-26, while national IDs
+issued from the almanac in force then pair it with 1995-03-25. Neither is a bug;
+they answer different questions.
 
 Pick the question you actually want answered:
 
@@ -199,7 +200,7 @@ from the other.
 | Range | 1356-01 … 1419-12 AH (1937-03-14 … 1999-04-16 CE) — 768 months |
 | Source | the Umm al-Qura dataset of [`hijridate`](https://github.com/dralshehri/hijridate) 2.5.0 by Mohammed Alshehri (MIT), compiled from the printed almanacs |
 | Validation | every one of the 768 months cross-checked against an independent implementation of the same historical calendar ([AlAdhan](https://aladhan.com/), `calendarMethod=HJCoSA`) — **zero disagreements** |
-| Divergence | 484 of 768 months (63%) start on a different Gregorian day than the official table |
+| Divergence | 484 of 768 months (63%) start on a different Gregorian day than the official table: 452 by one day earlier, 15 by two days earlier, 17 by one day later |
 | 1420 AH onwards | identical to `Reckoning::Official`, verified month by month |
 
 Two deliberate limits:

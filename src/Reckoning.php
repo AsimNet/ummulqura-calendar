@@ -10,7 +10,8 @@ namespace AsimNet\UmmulquraCalendar;
  * The criterion behind the calendar was last revised for 1420 AH. The official
  * service applies today's criterion across its whole range, so for earlier
  * months it reconstructs the calendar rather than reproducing the almanac that
- * was printed at the time — and the two readings can differ by a day.
+ * was printed at the time — and the two readings can differ by a day, or for a
+ * few months by two.
  */
 enum Reckoning
 {

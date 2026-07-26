@@ -20,7 +20,8 @@ use DateTimeZone;
  * recently for 1420 AH. The official service applies today's criterion over
  * its whole range, so months before 1420 AH are a retroactive reconstruction
  * rather than a reproduction of the almanac in force at the time, and may
- * differ by a day from Saudi civil records of that period. Use
+ * differ from Saudi civil records of that period by a day — for a few months,
+ * by two. Use
  * {@see self::isReconstructed()} to detect those dates, and pass
  * {@see Reckoning::AsPublished} to convert them the way the almanacs of the
  * time did (available for 1356 AH onwards).
@@ -239,9 +240,9 @@ final class UmmAlQura
      * was published at the time.
      *
      * Conversions for such dates remain faithful to the official service, but
-     * may differ by a day from what Saudi civil records (national ID, Ahwal
-     * Madaniyya) hold for the same Hijri date. To match those records, convert
-     * with {@see Reckoning::AsPublished} instead.
+     * may differ by a day — and for a few months by two — from what Saudi civil
+     * records (national ID, Ahwal Madaniyya) hold for the same Hijri date. To
+     * match those records, convert with {@see Reckoning::AsPublished} instead.
      *
      * Accepts either a Gregorian date or a Hijri (year, month, day) triple,
      * mirroring {@see self::supports()}; for a triple only the year is
