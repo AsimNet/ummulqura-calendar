@@ -21,7 +21,9 @@ use DateTimeZone;
  * its whole range, so months before 1420 AH are a retroactive reconstruction
  * rather than a reproduction of the almanac in force at the time, and may
  * differ by a day from Saudi civil records of that period. Use
- * {@see self::isReconstructed()} to detect those dates.
+ * {@see self::isReconstructed()} to detect those dates, and pass
+ * {@see Reckoning::AsPublished} to convert them the way the almanacs of the
+ * time did (available for 1356 AH onwards).
  */
 final class UmmAlQura
 {
@@ -47,6 +49,18 @@ final class UmmAlQura
     public const CRITERION_EPOCH_GREGORIAN = '1999-04-17';
 
     /**
+     * Earliest Hijri year covered by {@see Reckoning::AsPublished}. Below this
+     * the surviving sources for the printed almanacs disagree with each other,
+     * so no as-published answer is offered.
+     */
+    public const AS_PUBLISHED_MIN_HIJRI_YEAR = 1356;
+
+    /**
+     * Gregorian equivalent of 1356-01-01 AH as published, pinned by the table.
+     */
+    public const AS_PUBLISHED_MIN_GREGORIAN = '1937-03-14';
+
+    /**
      * Number of Hijri months elapsed before the first table entry (1318-01).
      */
     private const HIJRI_OFFSET = 1317 * 12;
@@ -63,6 +77,11 @@ final class UmmAlQura
      */
     private static ?array $monthStarts = null;
 
+    /**
+     * @var list<int>|null
+     */
+    private static ?array $asPublishedMonthStarts = null;
+
     private function __construct() {}
 
     /**
@@ -70,7 +89,7 @@ final class UmmAlQura
      *
      * @throws OutOfSupportedRangeException
      */
-    public static function toHijri(DateTimeInterface $date): HijriDate
+    public static function toHijri(DateTimeInterface $date, Reckoning $reckoning = Reckoning::Official): HijriDate
     {
         $rjd = self::gregorianToRjd($date);
 
@@ -83,7 +102,17 @@ final class UmmAlQura
             ));
         }
 
-        $monthStarts = self::monthStarts();
+        if ($reckoning === Reckoning::AsPublished && $rjd < self::asPublishedMinRjd()) {
+            throw new OutOfSupportedRangeException(sprintf(
+                'Gregorian date %s predates the as-published table, which begins at %s (%d-01-01 AH); '
+                .'the surviving sources for earlier months disagree with each other.',
+                $date->format('Y-m-d'),
+                self::AS_PUBLISHED_MIN_GREGORIAN,
+                self::AS_PUBLISHED_MIN_HIJRI_YEAR,
+            ));
+        }
+
+        $monthStarts = self::monthStarts($reckoning);
         $index = self::searchMonthIndex($monthStarts, $rjd);
         $months = $index + self::HIJRI_OFFSET;
         $years = intdiv($months, 12);
@@ -101,11 +130,15 @@ final class UmmAlQura
      *
      * @throws OutOfSupportedRangeException
      */
-    public static function toGregorian(int $year, int $month, int $day): DateTimeImmutable
-    {
-        self::assertHijri($year, $month, $day);
+    public static function toGregorian(
+        int $year,
+        int $month,
+        int $day,
+        Reckoning $reckoning = Reckoning::Official,
+    ): DateTimeImmutable {
+        self::assertHijri($year, $month, $day, $reckoning);
 
-        $monthStarts = self::monthStarts();
+        $monthStarts = self::monthStarts($reckoning);
         $index = self::monthIndex($year, $month);
         $rjd = $monthStarts[$index] + $day - 1;
 
@@ -113,15 +146,17 @@ final class UmmAlQura
     }
 
     /**
-     * Number of days (29 or 30 in the modern era) in the given Hijri month.
+     * Number of days in the given Hijri month — 29 or 30 throughout the
+     * official table; the as-published table also carries a single 28-day
+     * month (Sha'ban 1364), which the early almanacs really did record.
      *
      * @throws OutOfSupportedRangeException
      */
-    public static function monthLength(int $year, int $month): int
+    public static function monthLength(int $year, int $month, Reckoning $reckoning = Reckoning::Official): int
     {
-        self::assertHijri($year, $month, 1);
+        self::assertHijri($year, $month, 1, $reckoning);
 
-        $monthStarts = self::monthStarts();
+        $monthStarts = self::monthStarts($reckoning);
         $index = self::monthIndex($year, $month);
 
         return $monthStarts[$index + 1] - $monthStarts[$index];
@@ -162,11 +197,14 @@ final class UmmAlQura
      *
      * @throws OutOfSupportedRangeException
      */
-    public static function format(DateTimeInterface $date, string $pattern): string
-    {
+    public static function format(
+        DateTimeInterface $date,
+        string $pattern,
+        Reckoning $reckoning = Reckoning::Official,
+    ): string {
         $isoDay = (int) $date->format('N');
 
-        return self::toHijri($date)->format(strtr($pattern, [
+        return self::toHijri($date, $reckoning)->format(strtr($pattern, [
             'l' => self::WEEKDAY_NAMES_AR[$isoDay],
             'D' => self::WEEKDAY_NAMES_AR_SHORT[$isoDay],
         ]));
@@ -176,16 +214,18 @@ final class UmmAlQura
      * Whether a Gregorian date — or a (year, month, day) Hijri triple — is
      * inside the supported table range.
      */
-    public static function supports(DateTimeInterface|int $date, ?int $month = null, ?int $day = null): bool
-    {
-        if ($date instanceof DateTimeInterface) {
-            $rjd = self::gregorianToRjd($date);
-
-            return $rjd >= self::RJD_MIN && $rjd <= self::RJD_MAX;
-        }
-
+    public static function supports(
+        DateTimeInterface|int $date,
+        ?int $month = null,
+        ?int $day = null,
+        Reckoning $reckoning = Reckoning::Official,
+    ): bool {
         try {
-            self::assertHijri($date, $month ?? 1, $day ?? 1);
+            if ($date instanceof DateTimeInterface) {
+                self::toHijri($date, $reckoning);
+            } else {
+                self::assertHijri($date, $month ?? 1, $day ?? 1, $reckoning);
+            }
         } catch (OutOfSupportedRangeException) {
             return false;
         }
@@ -200,8 +240,8 @@ final class UmmAlQura
      *
      * Conversions for such dates remain faithful to the official service, but
      * may differ by a day from what Saudi civil records (national ID, Ahwal
-     * Madaniyya) hold for the same Hijri date. Treat them as approximate when
-     * matching against those records.
+     * Madaniyya) hold for the same Hijri date. To match those records, convert
+     * with {@see Reckoning::AsPublished} instead.
      *
      * Accepts either a Gregorian date or a Hijri (year, month, day) triple,
      * mirroring {@see self::supports()}; for a triple only the year is
@@ -229,14 +269,27 @@ final class UmmAlQura
     /**
      * @throws OutOfSupportedRangeException
      */
-    private static function assertHijri(int $year, int $month, int $day): void
-    {
+    private static function assertHijri(
+        int $year,
+        int $month,
+        int $day,
+        Reckoning $reckoning = Reckoning::Official,
+    ): void {
         if ($year < self::HIJRI_MIN_YEAR || $year > self::HIJRI_MAX_YEAR) {
             throw new OutOfSupportedRangeException(sprintf(
                 'Hijri year must be between %d and %d, got %d.',
                 self::HIJRI_MIN_YEAR,
                 self::HIJRI_MAX_YEAR,
                 $year,
+            ));
+        }
+
+        if ($reckoning === Reckoning::AsPublished && $year < self::AS_PUBLISHED_MIN_HIJRI_YEAR) {
+            throw new OutOfSupportedRangeException(sprintf(
+                'Hijri year %d predates the as-published table, which begins at %d; '
+                .'the surviving sources for earlier months disagree with each other.',
+                $year,
+                self::AS_PUBLISHED_MIN_HIJRI_YEAR,
             ));
         }
 
@@ -248,7 +301,7 @@ final class UmmAlQura
             throw new OutOfSupportedRangeException(sprintf('Hijri day must be positive, got %d.', $day));
         }
 
-        $monthStarts = self::monthStarts();
+        $monthStarts = self::monthStarts($reckoning);
         $index = self::monthIndex($year, $month);
         $length = $monthStarts[$index + 1] - $monthStarts[$index];
 
@@ -337,8 +390,47 @@ final class UmmAlQura
     /**
      * @return list<int>
      */
-    private static function monthStarts(): array
+    private static function monthStarts(Reckoning $reckoning = Reckoning::Official): array
     {
+        if ($reckoning === Reckoning::AsPublished) {
+            return self::$asPublishedMonthStarts ??= self::buildAsPublishedMonthStarts();
+        }
+
         return self::$monthStarts ??= require __DIR__.'/Data/MonthStarts.php';
+    }
+
+    /**
+     * The official table with the 1356-01 .. 1419-12 span replaced by the
+     * month starts the almanacs of that era actually carried. Entries below
+     * 1356 are left untouched and are never reachable — assertHijri() and
+     * toHijri() reject them for this reckoning — and 1420 onwards is identical
+     * in both readings, so only the middle span is overridden.
+     *
+     * @return list<int>
+     */
+    private static function buildAsPublishedMonthStarts(): array
+    {
+        $table = self::monthStarts();
+        $overrides = require __DIR__.'/Data/MonthStartsAsPublished.php';
+
+        array_splice(
+            $table,
+            self::monthIndex(self::AS_PUBLISHED_MIN_HIJRI_YEAR, 1),
+            count($overrides),
+            $overrides,
+        );
+
+        return $table;
+    }
+
+    /**
+     * Reduced Julian Day of 1356-01-01 AH as published — the earliest date the
+     * as-published reckoning will answer for.
+     */
+    private static function asPublishedMinRjd(): int
+    {
+        return self::monthStarts(Reckoning::AsPublished)[
+            self::monthIndex(self::AS_PUBLISHED_MIN_HIJRI_YEAR, 1)
+        ];
     }
 }
