@@ -172,6 +172,43 @@ final class UmmAlQuraTest extends TestCase
         $this->assertFalse(UmmAlQura::supports(1447, 13, 1));
     }
 
+    public function test_criterion_epoch_constant_matches_the_bundled_table(): void
+    {
+        $this->assertSame(
+            UmmAlQura::CRITERION_EPOCH_GREGORIAN,
+            UmmAlQura::toGregorian(UmmAlQura::CRITERION_EPOCH_HIJRI_YEAR, 1, 1)->format('Y-m-d'),
+        );
+    }
+
+    public function test_is_reconstructed_marks_the_pre_criterion_era(): void
+    {
+        $this->assertTrue(UmmAlQura::isReconstructed(1419, 12, 29));
+        $this->assertFalse(UmmAlQura::isReconstructed(1420, 1, 1));
+        $this->assertFalse(UmmAlQura::isReconstructed(1447, 10, 1));
+        $this->assertTrue(UmmAlQura::isReconstructed(1318));
+
+        $this->assertTrue(UmmAlQura::isReconstructed(new DateTimeImmutable('1999-04-16')));
+        $this->assertFalse(UmmAlQura::isReconstructed(new DateTimeImmutable(UmmAlQura::CRITERION_EPOCH_GREGORIAN)));
+        $this->assertFalse(UmmAlQura::isReconstructed(new DateTimeImmutable('2026-03-20')));
+
+        // Well defined outside the supported range, and never throws.
+        $this->assertTrue(UmmAlQura::isReconstructed(new DateTimeImmutable('1850-01-01')));
+        $this->assertFalse(UmmAlQura::isReconstructed(new DateTimeImmutable('2080-01-01')));
+    }
+
+    /**
+     * Pins the known pre-1420 divergence rather than papering over it. The
+     * official service pairs 24 Shawwal 1415 with 1995-03-26; Saudi national
+     * IDs issued from the almanac in force at the time pair the same Hijri
+     * date with 1995-03-25. Both readings are defensible — the library
+     * follows the official service and flags the date as reconstructed.
+     */
+    public function test_pre_criterion_conversions_are_flagged_as_reconstructed(): void
+    {
+        $this->assertSame('1995-03-26', UmmAlQura::toGregorian(1415, 10, 24)->format('Y-m-d'));
+        $this->assertTrue(UmmAlQura::isReconstructed(1415, 10, 24));
+    }
+
     public function test_hijri_date_value_object(): void
     {
         $date = new HijriDate(1447, 9, 1);

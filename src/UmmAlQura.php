@@ -15,6 +15,13 @@ use DateTimeZone;
  * Pure PHP, zero dependencies.
  *
  * Supported range: 1900-04-30 .. 2077-11-16 CE (1318-01-01 .. 1500-12-30 AH).
+ *
+ * Note on eras: the Umm al-Qura criterion was revised several times, most
+ * recently for 1420 AH. The official service applies today's criterion over
+ * its whole range, so months before 1420 AH are a retroactive reconstruction
+ * rather than a reproduction of the almanac in force at the time, and may
+ * differ by a day from Saudi civil records of that period. Use
+ * {@see self::isReconstructed()} to detect those dates.
  */
 final class UmmAlQura
 {
@@ -25,6 +32,19 @@ final class UmmAlQura
     public const HIJRI_MIN_YEAR = 1318;
 
     public const HIJRI_MAX_YEAR = 1500;
+
+    /**
+     * First Hijri year governed by the current Umm al-Qura criterion
+     * (geocentric conjunction before sunset and moonset after sunset at
+     * Mecca). Months from this year onwards are the published calendar;
+     * earlier months are reconstructed — see the class docblock.
+     */
+    public const CRITERION_EPOCH_HIJRI_YEAR = 1420;
+
+    /**
+     * Gregorian equivalent of 1420-01-01 AH, pinned by the bundled table.
+     */
+    public const CRITERION_EPOCH_GREGORIAN = '1999-04-17';
 
     /**
      * Number of Hijri months elapsed before the first table entry (1318-01).
@@ -171,6 +191,39 @@ final class UmmAlQura
         }
 
         return true;
+    }
+
+    /**
+     * Whether a date predates the current Umm al-Qura criterion (1420 AH) and
+     * is therefore a retroactive reconstruction rather than the calendar that
+     * was published at the time.
+     *
+     * Conversions for such dates remain faithful to the official service, but
+     * may differ by a day from what Saudi civil records (national ID, Ahwal
+     * Madaniyya) hold for the same Hijri date. Treat them as approximate when
+     * matching against those records.
+     *
+     * Accepts either a Gregorian date or a Hijri (year, month, day) triple,
+     * mirroring {@see self::supports()}; for a triple only the year is
+     * consulted, since the era boundary falls on 1420-01-01. Never throws —
+     * the answer is well defined for dates outside the supported range too.
+     */
+    public static function isReconstructed(DateTimeInterface|int $date, ?int $month = null, ?int $day = null): bool
+    {
+        if ($date instanceof DateTimeInterface) {
+            return self::gregorianToRjd($date) < self::criterionEpochRjd();
+        }
+
+        return $date < self::CRITERION_EPOCH_HIJRI_YEAR;
+    }
+
+    /**
+     * Reduced Julian Day of 1420-01-01 AH, read off the bundled table so the
+     * epoch can never drift away from the data.
+     */
+    private static function criterionEpochRjd(): int
+    {
+        return self::monthStarts()[self::monthIndex(self::CRITERION_EPOCH_HIJRI_YEAR, 1)];
     }
 
     /**
