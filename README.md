@@ -13,11 +13,17 @@ up in the **official Umm al-Qura month tables**, scraped directly from
 [ummulqura.org.sa](https://www.ummulqura.org.sa/ar), so every conversion
 matches the official calendar exactly.
 
+One caveat no library can remove: the official calendar itself only settled on
+its present criterion in 1420 AH, so dates before April 1999 need care — see
+[Eras and civil records](#eras-and-civil-records).
+
 - 🎯 **Exact** — all 2,196 bundled months fetched from the official KACST
   conversion service and verified in both directions
 - 🪶 **Zero dependencies** — pure PHP, works with any `DateTimeInterface`
   (including Carbon)
 - 🗓️ **Wide range** — 1318–1500 AH (1900–2077 CE)
+- 🧭 **Era-aware** — flags dates before 1420 AH, where the official calendar is
+  a retroactive reconstruction ([why this matters](#eras-and-civil-records))
 - 🧪 **Proven** — self-contained test suite pinning officially verified dates,
   round-trips, boundaries and month lengths
 
@@ -103,7 +109,6 @@ Verified against the official KACST conversion service:
 |---------|--------|
 | **This package** | **Exact — 2,196/2,196 official months match, both directions** |
 | `geniusts/hijri-dates` (arithmetic, no test suite) | ±1 day on many dates, including both Eids of 1447 |
-| `hijridate` dataset (Python, table-based) | 740 of 1,897 month starts (39%) differ from the official service |
 
 A few examples of arithmetic drift:
 
@@ -113,6 +118,55 @@ A few examples of arithmetic drift:
 | 2026-03-20 | **1 Shawwal 1447 (Eid al-Fitr)** | 2 Shawwal ✗ |
 | 2026-05-27 | **10 Dhu al-Hijjah 1447 (Eid al-Adha)** | 11 Dhu al-Hijjah ✗ |
 | 2017-05-05 | 9 Shaʿban 1438 | 8 Shaʿban ✗ (its own README example) |
+
+## Eras and civil records
+
+The Umm al-Qura criterion has been revised several times, most recently for
+**1420 AH**. The official service applies today's criterion across its entire
+range, so months before 1420 are a *retroactive reconstruction* — not a
+reproduction of the almanac that was actually published at the time.
+
+This is measurable. Comparing the bundled table month start by month start
+against the independent, table-based
+[`hijridate`](https://github.com/dralshehri/hijridate) dataset (v2.5.0), over
+the range both cover:
+
+| Hijri era | Month starts that differ | |
+|---|---|---|
+| 1343–1419 — before the current criterion | 529 / 924 | 57% |
+| **1420–1445 — under the current criterion** | **0 / 312** | **0%** |
+| 1446–1500 — remainder of the table | 211 / 660 | 32% |
+
+Where the criterion is current and the dates are not far-future, two
+independently built tables agree **perfectly, 312 months out of 312**. That is
+the real accuracy signal. A single headline "39% of month starts differ" figure
+across the whole range obscures it, because the disagreement lives almost
+entirely in the reconstructed past — and in a far-future band whose cause is
+not investigated here.
+
+### What this means in practice
+
+A pre-1420 conversion can differ by a day from Saudi civil records holding the
+same Hijri date. The official service pairs 24 Shawwal 1415 with 1995-03-26,
+while national IDs issued from the almanac in force then pair it with
+1995-03-25. Neither is a bug; they answer different questions.
+
+So for a Hijri date of birth taken from a document issued before April 1999, do
+not expect this library — or any library — to reproduce the Gregorian date
+printed beside it. Store what the document says, and convert only for display.
+
+```php
+UmmAlQura::isReconstructed(1415, 10, 24);                        // true
+UmmAlQura::isReconstructed(new DateTimeImmutable('1995-03-25')); // true
+UmmAlQura::isReconstructed(1447, 10, 1);                         // false
+
+UmmAlQura::CRITERION_EPOCH_HIJRI_YEAR; // 1420
+UmmAlQura::CRITERION_EPOCH_GREGORIAN;  // '1999-04-17'
+```
+
+`isReconstructed()` accepts a Gregorian date or a Hijri triple, mirroring
+`supports()`, and never throws — it is well defined outside the supported range
+too.
 
 ## Data source
 
