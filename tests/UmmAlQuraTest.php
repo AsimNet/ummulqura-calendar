@@ -227,9 +227,39 @@ final class UmmAlQuraTest extends TestCase
             UmmAlQura::toHijri(new DateTimeImmutable('1995-03-25'), Reckoning::AsPublished)->toIsoString(),
         );
 
-        // ...while the official reckoning is off by one in both directions.
+        // ...while for this date the official reckoning is a day out both ways.
         $this->assertSame('1995-03-26', UmmAlQura::toGregorian(1415, 10, 24)->format('Y-m-d'));
         $this->assertSame('1415-10-23', UmmAlQura::toHijri(new DateTimeImmutable('1995-03-25'))->toIsoString());
+    }
+
+    /**
+     * The two readings are not always within a day of each other: 15 of the 768
+     * covered month starts sit two days apart. Pinned as a histogram so the
+     * maximum stated in the docs cannot drift away from the tables.
+     */
+    public function test_divergence_between_reckonings_never_exceeds_two_days(): void
+    {
+        $histogram = [];
+
+        foreach (self::everyAsPublishedMonth() as [$year, $month]) {
+            $delta = (int) UmmAlQura::toGregorian($year, $month, 1)
+                ->diff(UmmAlQura::toGregorian($year, $month, 1, Reckoning::AsPublished))
+                ->format('%r%a');
+
+            $histogram[$delta] = ($histogram[$delta] ?? 0) + 1;
+        }
+
+        ksort($histogram);
+
+        $this->assertSame([-2 => 15, -1 => 452, 0 => 284, 1 => 17], $histogram);
+        $this->assertLessThanOrEqual(2, max(array_map('abs', array_keys($histogram))));
+
+        // Muharram 1357 — a two-day case, corroborated by the independent source.
+        $this->assertSame('1938-03-04', UmmAlQura::toGregorian(1357, 1, 1)->format('Y-m-d'));
+        $this->assertSame(
+            '1938-03-02',
+            UmmAlQura::toGregorian(1357, 1, 1, Reckoning::AsPublished)->format('Y-m-d'),
+        );
     }
 
     public function test_the_two_reckonings_are_identical_from_the_criterion_epoch_onwards(): void
