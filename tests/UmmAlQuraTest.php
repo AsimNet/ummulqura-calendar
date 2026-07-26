@@ -6,6 +6,7 @@ namespace AsimNet\UmmulquraCalendar\Tests;
 
 use AsimNet\UmmulquraCalendar\HijriDate;
 use AsimNet\UmmulquraCalendar\OutOfSupportedRangeException;
+use AsimNet\UmmulquraCalendar\Reckoning;
 use AsimNet\UmmulquraCalendar\UmmAlQura;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -207,6 +208,174 @@ final class UmmAlQuraTest extends TestCase
     {
         $this->assertSame('1995-03-26', UmmAlQura::toGregorian(1415, 10, 24)->format('Y-m-d'));
         $this->assertTrue(UmmAlQura::isReconstructed(1415, 10, 24));
+    }
+
+    /**
+     * The pairing a Saudi national ID of that era carries: 24 Shawwal 1415 <->
+     * 1995-03-25. The official reckoning answers 1995-03-26; the as-published
+     * reckoning reproduces the document, in both directions.
+     */
+    public function test_as_published_reproduces_civil_record_pairings(): void
+    {
+        $this->assertSame(
+            '1995-03-25',
+            UmmAlQura::toGregorian(1415, 10, 24, Reckoning::AsPublished)->format('Y-m-d'),
+        );
+
+        $this->assertSame(
+            '1415-10-24',
+            UmmAlQura::toHijri(new DateTimeImmutable('1995-03-25'), Reckoning::AsPublished)->toIsoString(),
+        );
+
+        // ...while for this date the official reckoning is a day out both ways.
+        $this->assertSame('1995-03-26', UmmAlQura::toGregorian(1415, 10, 24)->format('Y-m-d'));
+        $this->assertSame('1415-10-23', UmmAlQura::toHijri(new DateTimeImmutable('1995-03-25'))->toIsoString());
+    }
+
+    /**
+     * The two readings are not always within a day of each other: 15 of the 768
+     * covered month starts sit two days apart. Pinned as a histogram so the
+     * maximum stated in the docs cannot drift away from the tables.
+     */
+    public function test_divergence_between_reckonings_never_exceeds_two_days(): void
+    {
+        $histogram = [];
+
+        foreach (self::everyAsPublishedMonth() as [$year, $month]) {
+            $delta = (int) UmmAlQura::toGregorian($year, $month, 1)
+                ->diff(UmmAlQura::toGregorian($year, $month, 1, Reckoning::AsPublished))
+                ->format('%r%a');
+
+            $histogram[$delta] = ($histogram[$delta] ?? 0) + 1;
+        }
+
+        ksort($histogram);
+
+        $this->assertSame([-2 => 15, -1 => 452, 0 => 284, 1 => 17], $histogram);
+        $this->assertLessThanOrEqual(2, max(array_map('abs', array_keys($histogram))));
+
+        // Muharram 1357 — a two-day case, corroborated by the independent source.
+        $this->assertSame('1938-03-04', UmmAlQura::toGregorian(1357, 1, 1)->format('Y-m-d'));
+        $this->assertSame(
+            '1938-03-02',
+            UmmAlQura::toGregorian(1357, 1, 1, Reckoning::AsPublished)->format('Y-m-d'),
+        );
+    }
+
+    public function test_the_two_reckonings_are_identical_from_the_criterion_epoch_onwards(): void
+    {
+        for ($year = UmmAlQura::CRITERION_EPOCH_HIJRI_YEAR; $year <= UmmAlQura::HIJRI_MAX_YEAR; $year++) {
+            foreach ([1, 7] as $month) {
+                $this->assertSame(
+                    UmmAlQura::toGregorian($year, $month, 1)->format('Y-m-d'),
+                    UmmAlQura::toGregorian($year, $month, 1, Reckoning::AsPublished)->format('Y-m-d'),
+                    "Reckonings must agree at {$year}-{$month}",
+                );
+            }
+        }
+    }
+
+    public function test_as_published_diverges_from_official_across_most_of_its_range(): void
+    {
+        // 484 of the 768 covered months start on a different Gregorian day.
+        $differing = 0;
+
+        for ($year = UmmAlQura::AS_PUBLISHED_MIN_HIJRI_YEAR; $year < UmmAlQura::CRITERION_EPOCH_HIJRI_YEAR; $year++) {
+            for ($month = 1; $month <= 12; $month++) {
+                $differing += (int) (
+                    UmmAlQura::toGregorian($year, $month, 1)->format('Y-m-d')
+                    !== UmmAlQura::toGregorian($year, $month, 1, Reckoning::AsPublished)->format('Y-m-d')
+                );
+            }
+        }
+
+        $this->assertSame(484, $differing);
+    }
+
+    public function test_as_published_round_trips_and_stays_structurally_sound(): void
+    {
+        $previous = null;
+
+        for ($year = UmmAlQura::AS_PUBLISHED_MIN_HIJRI_YEAR; $year < UmmAlQura::CRITERION_EPOCH_HIJRI_YEAR; $year++) {
+            for ($month = 1; $month <= 12; $month++) {
+                $start = UmmAlQura::toGregorian($year, $month, 1, Reckoning::AsPublished);
+
+                if ($previous !== null) {
+                    $this->assertGreaterThan($previous, $start, "Month starts must increase at {$year}-{$month}");
+                }
+                $previous = $start;
+
+                $length = UmmAlQura::monthLength($year, $month, Reckoning::AsPublished);
+                $this->assertContains($length, [28, 29, 30], "Length of {$year}-{$month}");
+
+                $this->assertTrue(
+                    UmmAlQura::toHijri($start, Reckoning::AsPublished)->equals(new HijriDate($year, $month, 1)),
+                    "Round trip failed for {$year}-{$month}-01",
+                );
+            }
+        }
+    }
+
+    /**
+     * Sha'ban 1364 really is 28 days long in the historical record — carried by
+     * both independent sources the table was validated against, so it is
+     * preserved rather than smoothed to 29.
+     */
+    public function test_as_published_preserves_the_known_28_day_month(): void
+    {
+        $this->assertSame(28, UmmAlQura::monthLength(1364, 8, Reckoning::AsPublished));
+        $this->assertSame(1, array_sum(array_map(
+            fn (array $ym): int => (int) (UmmAlQura::monthLength($ym[0], $ym[1], Reckoning::AsPublished) === 28),
+            [...self::everyAsPublishedMonth()],
+        )));
+    }
+
+    /**
+     * @return iterable<array{int, int}>
+     */
+    private static function everyAsPublishedMonth(): iterable
+    {
+        for ($year = UmmAlQura::AS_PUBLISHED_MIN_HIJRI_YEAR; $year < UmmAlQura::CRITERION_EPOCH_HIJRI_YEAR; $year++) {
+            for ($month = 1; $month <= 12; $month++) {
+                yield [$year, $month];
+            }
+        }
+    }
+
+    public function test_as_published_boundary_constant_matches_the_table(): void
+    {
+        $this->assertSame(
+            UmmAlQura::AS_PUBLISHED_MIN_GREGORIAN,
+            UmmAlQura::toGregorian(UmmAlQura::AS_PUBLISHED_MIN_HIJRI_YEAR, 1, 1, Reckoning::AsPublished)
+                ->format('Y-m-d'),
+        );
+    }
+
+    public function test_as_published_refuses_years_below_its_range(): void
+    {
+        $this->assertFalse(UmmAlQura::supports(1355, 12, 1, Reckoning::AsPublished));
+        $this->assertTrue(UmmAlQura::supports(1355, 12, 1));
+        $this->assertFalse(UmmAlQura::supports(new DateTimeImmutable('1937-03-13'), reckoning: Reckoning::AsPublished));
+        $this->assertTrue(UmmAlQura::supports(new DateTimeImmutable('1937-03-13')));
+
+        $this->expectException(OutOfSupportedRangeException::class);
+
+        UmmAlQura::toGregorian(1355, 12, 1, Reckoning::AsPublished);
+    }
+
+    public function test_as_published_refuses_gregorian_dates_below_its_range(): void
+    {
+        $this->expectException(OutOfSupportedRangeException::class);
+
+        UmmAlQura::toHijri(new DateTimeImmutable('1937-03-13'), Reckoning::AsPublished);
+    }
+
+    public function test_format_honours_the_reckoning(): void
+    {
+        $date = new DateTimeImmutable('1995-03-25');
+
+        $this->assertSame('23 شوال 1415', UmmAlQura::format($date, 'j F Y'));
+        $this->assertSame('24 شوال 1415', UmmAlQura::format($date, 'j F Y', Reckoning::AsPublished));
     }
 
     public function test_hijri_date_value_object(): void
