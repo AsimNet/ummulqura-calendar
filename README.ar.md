@@ -13,6 +13,20 @@
 إلا في سنة 1420هـ، فما كان قبل أبريل 1999 يحتاج إلى تنبّه — انظر قسم «الحقب
 وسجلات الأحوال المدنية» أدناه.
 
+<p align="center">
+  <img
+    src="https://raw.githubusercontent.com/AsimNet/ummulqura-calendar/main/art/demo.gif"
+    alt="جلسة طرفية تُحوّل 2026-03-20 إلى 1 شوال 1447 والعكس، وتطبع أسماء الأشهر العربية وعدد أيام رمضان وقراءتَي تاريخٍ سابق لسنة 1420"
+    width="851">
+</p>
+
+<p align="center">
+  <sub>
+    مسجَّلة من <a href="tools/demo.php"><code>tools/demo.php</code></a> —
+    <a href="https://raw.githubusercontent.com/AsimNet/ummulqura-calendar/main/art/demo.mp4">نسخة MP4</a>
+  </sub>
+</p>
+
 ## التثبيت
 
 ```bash
@@ -43,6 +57,26 @@ UmmAlQura::monthLength(1447, 9); // عدد أيام رمضان 1447
 
 تُقبل أي قيمة من نوع `DateTimeInterface` (بما فيها `Carbon`)، ويُقرأ منها
 التاريخ فقط (يوم-شهر-سنة) دون الوقت أو المنطقة الزمنية.
+
+ولتجربة الجولة نفسها محلياً — دون أي تثبيت:
+
+```bash
+php tools/demo.php
+```
+
+<p align="center">
+  <img
+    src="https://raw.githubusercontent.com/AsimNet/ummulqura-calendar/main/art/calendar.png"
+    alt="شهرا رمضان وشوال 1447 على هيئة شبكة أيام مع مقابلها الميلادي، ويوم 1 شوال مميَّز بوصفه عيد الفطر الموافق الجمعة 20 مارس 2026"
+    width="851">
+</p>
+
+<p align="center">
+  <sub>
+    كل خانة أعلاه مأخوذة من جداول أم القرى المضمّنة
+    (<a href="tools/render-calendar.php"><code>tools/render-calendar.php</code></a>)
+  </sub>
+</p>
 
 ## النطاق المدعوم
 
