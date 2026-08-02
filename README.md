@@ -6,6 +6,20 @@
 ![PHP 8.1+](https://img.shields.io/badge/php-%E2%89%A5%208.1-777bb4.svg)
 ![Zero dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)
 
+<p align="center">
+  <img
+    src="https://raw.githubusercontent.com/AsimNet/ummulqura-calendar/main/art/demo.gif"
+    alt="Terminal session converting 2026-03-20 to 1 Shawwal 1447 and back, printing Arabic month names, Ramadan's length, and the two readings of a pre-1420 date"
+    width="851">
+</p>
+
+<p align="center">
+  <sub>
+    Recorded from <a href="tools/demo.php"><code>tools/demo.php</code></a> —
+    <a href="https://raw.githubusercontent.com/AsimNet/ummulqura-calendar/main/art/demo.mp4">MP4 version</a>
+  </sub>
+</p>
+
 Most Hijri libraries *calculate* the lunar calendar arithmetically and drift by
 ±1 day from the calendar Saudi Arabia actually uses — including on Eid al-Fitr
 and Eid al-Adha. This library doesn't calculate anything: it looks the answer
@@ -58,6 +72,12 @@ $hijri->toArabicString(); // '1 شوال 1447هـ'
 ```php
 // Hijri → Gregorian (DateTimeImmutable, midnight UTC)
 UmmAlQura::toGregorian(1447, 10, 1)->format('Y-m-d'); // '2026-03-20'
+```
+
+Run the same tour locally — no install required:
+
+```bash
+php tools/demo.php
 ```
 
 ## Usage
@@ -120,6 +140,20 @@ A few examples of arithmetic drift:
 | 2026-03-20 | **1 Shawwal 1447 (Eid al-Fitr)** | 2 Shawwal ✗ |
 | 2026-05-27 | **10 Dhu al-Hijjah 1447 (Eid al-Adha)** | 11 Dhu al-Hijjah ✗ |
 | 2017-05-05 | 9 Shaʿban 1438 | 8 Shaʿban ✗ (its own README example) |
+
+<p align="center">
+  <img
+    src="https://raw.githubusercontent.com/AsimNet/ummulqura-calendar/main/art/calendar.png"
+    alt="Ramadan 1447 and Shawwal 1447 rendered as month grids with their Gregorian dates, 1 Shawwal marked as Eid al-Fitr on Friday 20 March 2026"
+    width="851">
+</p>
+
+<p align="center">
+  <sub>
+    Every cell above is a lookup in the bundled tables
+    (<a href="tools/render-calendar.php"><code>tools/render-calendar.php</code></a>)
+  </sub>
+</p>
 
 ## Eras and civil records
 
@@ -240,6 +274,11 @@ The suite is self-contained — no `composer install` needed inside the package:
 ```bash
 phpunit -c phpunit.xml
 ```
+
+The README images are generated from the library itself and can be rebuilt
+with `php tools/render-demo.php` and `php tools/render-calendar.php` (they
+need `rsvg-convert`, `ffmpeg`, and the JetBrains Mono / Noto Naskh Arabic
+fonts).
 
 ## License
 
