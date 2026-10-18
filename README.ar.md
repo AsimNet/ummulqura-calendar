@@ -29,9 +29,16 @@
 
 ## التثبيت
 
+تُثبَّت الحزمة مباشرةً من GitHub. أضِف المستودع إلى Composer، ثم اطلب الحزمة:
+
 ```bash
+composer config repositories.ummulqura-calendar vcs https://github.com/AsimNet/ummulqura-calendar
 composer require asimnet/ummulqura-calendar
 ```
+
+> **حدود GitHub:** يقرأ Composer الإصدارات عبر واجهة GitHub البرمجية. إذا تعثّر التثبيت بسبب الحدود (وهذا شائع في CI)،
+> فأضِف رمز GitHub: `composer config --global github-oauth.github.com YOUR-GITHUB-TOKEN` (لا يحتاج أي صلاحيات لمستودع عام)،
+> أو مرّره عبر `COMPOSER_AUTH='{"github-oauth":{"github.com":"YOUR-GITHUB-TOKEN"}}'`.
 
 تتطلب PHP 8.1 أو أحدث.
 

@@ -47,9 +47,16 @@ its present criterion in 1420 AH, so dates before April 1999 need care — see
 
 ## Installation
 
+The package is installed straight from GitHub. Add the repository to Composer, then require the package:
+
 ```bash
+composer config repositories.ummulqura-calendar vcs https://github.com/AsimNet/ummulqura-calendar
 composer require asimnet/ummulqura-calendar
 ```
+
+> **GitHub rate limits:** Composer reads tags through the GitHub API. If installs get throttled (common in CI),
+> add a GitHub token: `composer config --global github-oauth.github.com YOUR-GITHUB-TOKEN` (no scopes needed for a
+> public repository), or provide it via `COMPOSER_AUTH='{"github-oauth":{"github.com":"YOUR-GITHUB-TOKEN"}}'`.
 
 Requires PHP 8.1 or newer. No extensions, no framework.
 
